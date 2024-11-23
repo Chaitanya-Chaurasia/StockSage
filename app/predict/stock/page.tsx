@@ -53,6 +53,7 @@ const StockDashboard: React.FC = () => {
   const [finnhubDecision, setFinnhubDecision] = useState(
     "Click on  Calculate Decisions."
   );
+  const [marketData, setMarketData] = useState({});
   const [modelPred, setModelPred] = useState("Click on  Calculate Decisions.");
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 10;
@@ -102,6 +103,7 @@ const StockDashboard: React.FC = () => {
       const response = await axios.post(`http://127.0.0.1:5000/stock_prices`, {
         company: companyFromParams,
       });
+
       setStockData(response.data.daily_prices);
     } catch (error) {
       console.error("Error fetching stock prices:", error);
@@ -109,7 +111,32 @@ const StockDashboard: React.FC = () => {
     }
   };
 
-  const collectFinnHubSentiment = async () => {};
+  const collectFinnHubSentiment = async () => {
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/market_sentiment",
+        {
+          symbol: companyFromParams,
+          start_date: "2020-01-01",
+          end_date: "2024-11-20",
+        }
+      );
+      setFinnhubDecision(
+        "Stock to go " +
+          response.data.prediction +
+          " with a " +
+          response.data.confidence +
+          " % confidence and with a margin of error of about " +
+          (0.9999999 - response.data.report.accuracy) * 100 * 0.05 +
+          " %."
+      );
+      setMarketData(response.data);
+    } catch (error) {
+      console.error("Error fetching market sentiment:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
   const calculateTradeDecision = async () => {
     try {
       const data = {
