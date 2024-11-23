@@ -190,7 +190,7 @@ const StockDashboard: React.FC = () => {
   };
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="p-10 space-y-4">
       <h1 className="text-2xl font-semibold mb-4 tracking-tighter">
         Your results for {companyFromParams}
       </h1>
@@ -337,9 +337,13 @@ const StockDashboard: React.FC = () => {
                   </TableCaption>
                   <TableHeader>
                     <TableRow>
-                      <TableCell className="font-semibold">Title</TableCell>
-                      <TableCell className="font-semibold">Content</TableCell>
-                      <TableCell className="font-semibold text-right">
+                      <TableCell className="font-semibold tracking-tighter">
+                        Title
+                      </TableCell>
+                      <TableCell className="font-semibold tracking-tighter">
+                        Content
+                      </TableCell>
+                      <TableCell className="font-semibold tracking-tighter text-right">
                         Sentiment Score
                       </TableCell>
                     </TableRow>
@@ -347,14 +351,14 @@ const StockDashboard: React.FC = () => {
                   <TableBody>
                     {currentPosts.map((post, index) => (
                       <TableRow key={index}>
-                        <TableCell className=" text-wrap w-[33%]">
+                        <TableCell className="tracking-tighter text-wrap w-[33%]">
                           {post[0]}
                         </TableCell>
-                        <TableCell className="text-wrap">
+                        <TableCell className="tracking-tighter text-wrap">
                           {truncateContent(post[1] ? post[1] : "N/A")}
                         </TableCell>
                         <TableCell
-                          className={`text-right w-[10%] ${
+                          className={`tracking-tighter text-right w-[10%] ${
                             post[2] > 0 ? "text-green-500" : "text-red-500"
                           }`}
                         >
@@ -428,71 +432,84 @@ const StockDashboard: React.FC = () => {
               </p>
             </div>
             <div className="flex flex-col gap-4">
-              <span className="mt-4">
+              <span className="mt-4 text-sm tracking-tighter">
                 Customize your trade decision. Input custom threshold values and
                 get an approximate decision on whether to trigger buy or sell{" "}
                 {companyFromParams}.
               </span>
-              <div className="flex items-center space-x-2 mt-4">
-                <Button
-                  onClick={() => setLowerThreshold((prev) => prev - 1)}
-                  className="px-3 py-1"
-                >
-                  -
-                </Button>
-                <Input
-                  type="number"
-                  value={lowerThreshold}
-                  onChange={(e) => setLowerThreshold(Number(e.target.value))}
-                  className="w-20 text-center"
-                />
-                <Button
-                  onClick={() => setLowerThreshold((prev) => prev + 1)}
-                  className="px-3 py-1"
-                >
-                  +
-                </Button>
-                <span>to</span>
-                <Button
-                  onClick={() => setUpperThreshold((prev) => prev - 1)}
-                  className="px-3 py-1"
-                >
-                  -
-                </Button>
-                <Input
-                  type="number"
-                  value={upperThreshold}
-                  onChange={(e) => setUpperThreshold(Number(e.target.value))}
-                  className="w-20 text-center"
-                />
-                <Button
-                  onClick={() => setUpperThreshold((prev) => prev + 1)}
-                  className="px-3 py-1"
-                >
-                  +
-                </Button>
-                <Button onClick={calculateTradeDecision} disabled={loading}>
-                  {loading ? (
-                    <Loader2 className="animate-spin" />
-                  ) : (
-                    "Calculate Decision"
-                  )}
-                </Button>
+              <div className="flex flex-col items-center space-x-2 mt-4 justify-center gap-2">
+                <div className="flex items-center justify-center gap-2">
+                  <Button
+                    onClick={() => setLowerThreshold((prev) => prev - 1)}
+                    className="px-3 py-1"
+                    variant="outline"
+                  >
+                    -
+                  </Button>
+                  <Input
+                    type="number"
+                    value={lowerThreshold}
+                    onChange={(e) => setLowerThreshold(Number(e.target.value))}
+                    className="w-20 text-center"
+                  />
+                  <Button
+                    onClick={() => setLowerThreshold((prev) => prev + 1)}
+                    className="px-3 py-1"
+                    variant="outline"
+                  >
+                    +
+                  </Button>
+                  <span>to</span>
+                  <Button
+                    onClick={() => setUpperThreshold((prev) => prev - 1)}
+                    className="px-3 py-1"
+                    variant="outline"
+                  >
+                    -
+                  </Button>
+                  <Input
+                    type="number"
+                    value={upperThreshold}
+                    onChange={(e) => setUpperThreshold(Number(e.target.value))}
+                    className="w-20 text-center"
+                  />
+                  <Button
+                    onClick={() => setUpperThreshold((prev) => prev + 1)}
+                    className="px-3 py-1"
+                    variant="outline"
+                  >
+                    +
+                  </Button>
+                </div>
+
+                <div>
+                  <Button
+                    onClick={calculateTradeDecision}
+                    disabled={loading}
+                    variant="outline"
+                  >
+                    {loading ? (
+                      <Loader2 className="animate-spin" />
+                    ) : (
+                      "Calculate Decision"
+                    )}
+                  </Button>
+                </div>
               </div>
             </div>
 
-            <div className="flex flex-col items-top justify-center gap-2 w-full">
-              <p className="flex gap-2 font-normal tracking-tighter text-md mt-8">
+            <div className="flex flex-col items-top justify-center gap-2 w-full ">
+              <p className="flex gap-2 font-normal tracking-tighter text-sm mt-8">
                 <Sticker />
                 Action according to Sentiment Analysis:{" "}
                 <span className="font-semibold">{decision}</span>
               </p>
-              <p className="font-normal gap-2 flex text-wrap tracking-tighter text-md">
+              <p className="font-normal gap-2 flex text-wrap tracking-tighter text-sm">
                 <SquareRadical />
                 Based on closing prices, model predicts you should:{" "}
                 <span className="font-semibold">{modelPred}</span>
               </p>
-              <p className="font-normal flex gap-2 tracking-tighter text-md">
+              <p className="font-normal flex gap-2 tracking-tighter text-sm">
                 <Store />
                 What Market says:
                 <span className="font-semibold">
