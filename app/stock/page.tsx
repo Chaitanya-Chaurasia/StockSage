@@ -1,7 +1,6 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import axios from "axios";
-import { Alert } from "@/app/components/ui/alert";
 import {
   Table,
   TableBody,
@@ -21,7 +20,6 @@ import {
 import {
   LineChart,
   Line,
-  XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
@@ -36,15 +34,33 @@ import yh from "@/public/yh.png";
 import reddit from "@/public/reddit.svg";
 import fin from "@/public/finn.png";
 import Image from "next/image";
+
+interface StockData {
+  date: string;
+  open: number;
+  close: number;
+}
+
+interface Post {
+  title: string;
+  content: string;
+  sentimentScore: number;
+}
+
+interface SentimentData {
+  date: string;
+  score: number;
+  sentiment: string;
+}
+
 const StockDashboard: React.FC = () => {
   const params = useSearchParams();
   const companyFromParams = params.get("name");
-  const [stockData, setStockData] = useState<any[]>([]);
-  const [sentimentData, setSentimentData] = useState<any[]>([]);
+  const [stockData, setStockData] = useState<StockData[]>([]);
+  const [sentimentData, setSentimentData] = useState<SentimentData[]>([]);
   const [averageSentiment, setAverageSentiment] = useState<number>(0);
-  const [notification, setNotification] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [posts, setPosts] = useState<any[]>([]);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [currentStockPage, setCurrentStockPage] = useState(1);
   const stocksPerPage = 5;
   const [lowerThreshold, setLowerThreshold] = useState(-10);
@@ -53,9 +69,9 @@ const StockDashboard: React.FC = () => {
   const [finnhubDecision, setFinnhubDecision] = useState(
     "Click on  Calculate Decisions."
   );
-  const [marketData, setMarketData] = useState({});
   const [modelPred, setModelPred] = useState("Click on  Calculate Decisions.");
   const [currentPage, setCurrentPage] = useState(1);
+  const [loadingDecision, setLoadingDecision] = useState(false);
   const postsPerPage = 10;
 
   const totalPages = Math.ceil(posts.length / postsPerPage);
@@ -73,10 +89,8 @@ const StockDashboard: React.FC = () => {
         await collectRedditPosts();
         await fetchSentimentScores();
         await collectFinnHubSentiment();
-        setNotification(null);
       } catch (error) {
         console.error("Error fetching data:", error);
-        setNotification("Error fetching data. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -92,15 +106,14 @@ const StockDashboard: React.FC = () => {
     stockStartIndex + stocksPerPage
   );
 
-  // Handle content truncation
-  const truncateContent = (content: any) =>
+  const truncateContent = (content: string) =>
     content.length > 200
       ? `${content.substring(0, 200)}... (read more)  `
       : content;
 
   const fetchStockPrices = async () => {
     try {
-      const response = await axios.post(`http://127.0.0.1:5000/stock_prices`, {
+      const response = await axios.post(`https://cse472.fly.dev/stock_prices`, {
         company: companyFromParams,
       });
 
@@ -114,7 +127,7 @@ const StockDashboard: React.FC = () => {
   const collectFinnHubSentiment = async () => {
     try {
       const response = await axios.post(
-        "http://localhost:5000/market_sentiment",
+        "https://cse472.fly.dev/market_sentiment",
         {
           symbol: companyFromParams,
           start_date: "2020-01-01",
@@ -130,7 +143,6 @@ const StockDashboard: React.FC = () => {
           (0.9999999 - response.data.report.accuracy) * 100 * 0.05 +
           " %."
       );
-      setMarketData(response.data);
     } catch (error) {
       console.error("Error fetching market sentiment:", error);
     } finally {
@@ -138,6 +150,8 @@ const StockDashboard: React.FC = () => {
     }
   };
   const calculateTradeDecision = async () => {
+    setLoadingDecision(true);
+
     try {
       const data = {
         threshold_high: upperThreshold,
@@ -147,24 +161,23 @@ const StockDashboard: React.FC = () => {
       };
 
       const response = await axios.post(
-        "http://localhost:5000/trade_decisions",
+        "https://cse472.fly.dev/trade_decisions",
         data
       );
       setDecision(response.data.action);
       setModelPred(response.data.model_prediction);
-      setNotification(`Trade Decision: ${response.data.action.toUpperCase()}`);
     } catch (error) {
       console.error("Error calculating trade decision:", error);
-      setNotification("Error calculating trade decision. Please try again.");
     } finally {
       setLoading(false);
+      setLoadingDecision(false);
     }
   };
 
   const fetchSentimentScores = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/daily_sentiment_scores`
+        `https://cse472.fly.dev/daily_sentiment_scores`
       );
       setSentimentData(response.data.daily_sentiment_scores);
       setAverageSentiment(response.data.average_sentiment);
@@ -177,12 +190,20 @@ const StockDashboard: React.FC = () => {
   const collectRedditPosts = async () => {
     try {
       const response = await axios.post(
-        `http://localhost:5000/collect_reddit_posts`,
+        `https://cse472.fly.dev/collect_reddit_posts`,
         {
           company: companyFromParams,
         }
       );
-      setPosts(response.data);
+      const formattedPosts: Post[] = response.data.map(
+        (post: [string, string, number]) => ({
+          title: post[0],
+          content: post[1] || "N/A",
+          sentimentScore: post[2],
+        })
+      );
+
+      setPosts(formattedPosts);
     } catch (error) {
       console.error("Error collecting Reddit posts:", error);
       throw error;
@@ -290,7 +311,6 @@ const StockDashboard: React.FC = () => {
                                 Math.max(prev - 1, 1)
                               )
                             }
-                            // disabled={currentStockPage === 1}
                           />
                         </PaginationItem>
                         {[...Array(totalStockPages)].map((_, index) => (
@@ -310,7 +330,6 @@ const StockDashboard: React.FC = () => {
                                 Math.min(prev + 1, totalStockPages)
                               )
                             }
-                            // disabled={currentStockPage === totalStockPages}
                           />
                         </PaginationItem>
                       </PaginationContent>
@@ -352,17 +371,19 @@ const StockDashboard: React.FC = () => {
                     {currentPosts.map((post, index) => (
                       <TableRow key={index}>
                         <TableCell className="tracking-tighter text-wrap w-[33%]">
-                          {post[0]}
+                          {post.title}
                         </TableCell>
                         <TableCell className="tracking-tighter text-wrap">
-                          {truncateContent(post[1] ? post[1] : "N/A")}
+                          {truncateContent(post.content)}
                         </TableCell>
                         <TableCell
                           className={`tracking-tighter text-right w-[10%] ${
-                            post[2] > 0 ? "text-green-500" : "text-red-500"
+                            post.sentimentScore > 0
+                              ? "text-green-500"
+                              : "text-red-500"
                           }`}
                         >
-                          {post[2]}
+                          {post.sentimentScore}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -423,7 +444,7 @@ const StockDashboard: React.FC = () => {
                 className={`text-3xl tracking-tighter ${
                   averageSentiment > 60
                     ? "text-green-500"
-                    : averageSentiment < 30
+                    : averageSentiment < 40
                     ? "text-red-500"
                     : "text-black"
                 }`}
@@ -502,11 +523,13 @@ const StockDashboard: React.FC = () => {
               <p className="flex gap-2 font-normal tracking-tighter text-sm mt-8">
                 <Sticker />
                 Action according to Sentiment Analysis:{" "}
+                {loadingDecision && <Loader2 className="animate-spin" />}
                 <span className="font-semibold">{decision}</span>
               </p>
               <p className="font-normal gap-2 flex text-wrap tracking-tighter text-sm">
                 <SquareRadical />
                 Based on closing prices, model predicts you should:{" "}
+                {loadingDecision && <Loader2 className="animate-spin" />}
                 <span className="font-semibold">{modelPred}</span>
               </p>
               <p className="font-normal flex gap-2 tracking-tighter text-sm">
@@ -553,9 +576,9 @@ const StockDashboard: React.FC = () => {
                         </TableCell>
                         <TableCell
                           className={`text-center ${
-                            day.sentiment > 0
+                            day.sentiment === "positive"
                               ? "text-green-500"
-                              : day.sentiment < 0
+                              : day.sentiment === "negative"
                               ? "text-red-500"
                               : "text-black"
                           }`}
@@ -575,4 +598,14 @@ const StockDashboard: React.FC = () => {
   );
 };
 
-export default StockDashboard;
+const Page: React.FC = () => {
+  return (
+    <div>
+      <Suspense fallback={<Loader2 className="animate-spin" size={48} />}>
+        <StockDashboard />
+      </Suspense>
+    </div>
+  );
+};
+
+export default Page;
