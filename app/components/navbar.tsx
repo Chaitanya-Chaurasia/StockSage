@@ -12,7 +12,7 @@ const Navbar = () => {
 
   const handleSearch = () => {
     if (searchTerm.trim()) {
-      router.push(`/predict/stock?name=${searchTerm}`);
+      router.push(`/stock?name=${searchTerm}`);
     }
   };
 
