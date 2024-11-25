@@ -113,7 +113,7 @@ const StockDashboard: React.FC = () => {
 
   const fetchStockPrices = async () => {
     try {
-      const response = await axios.post(`https://cse472.fly.dev/stock_prices`, {
+      const response = await axios.post(`http://127.0.0.1:8000/stock_prices`, {
         company: companyFromParams,
       });
 
@@ -127,7 +127,7 @@ const StockDashboard: React.FC = () => {
   const collectFinnHubSentiment = async () => {
     try {
       const response = await axios.post(
-        "https://cse472.fly.dev/market_sentiment",
+        "http://127.0.0.1:8000/market_sentiment",
         {
           symbol: companyFromParams,
           start_date: "2020-01-01",
@@ -161,7 +161,7 @@ const StockDashboard: React.FC = () => {
       };
 
       const response = await axios.post(
-        "https://cse472.fly.dev/trade_decisions",
+        "http://127.0.0.1:8000/trade_decisions",
         data
       );
       setDecision(response.data.action);
@@ -177,7 +177,7 @@ const StockDashboard: React.FC = () => {
   const fetchSentimentScores = async () => {
     try {
       const response = await axios.get(
-        `https://cse472.fly.dev/daily_sentiment_scores`
+        `http://127.0.0.1:8000/daily_sentiment_scores`
       );
       setSentimentData(response.data.daily_sentiment_scores);
       setAverageSentiment(response.data.average_sentiment);
@@ -190,7 +190,7 @@ const StockDashboard: React.FC = () => {
   const collectRedditPosts = async () => {
     try {
       const response = await axios.post(
-        `https://cse472.fly.dev/collect_reddit_posts`,
+        `http://127.0.0.1:8000/collect_reddit_posts`,
         {
           company: companyFromParams,
         }
