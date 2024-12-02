@@ -113,9 +113,12 @@ const StockDashboard: React.FC = () => {
 
   const fetchStockPrices = async () => {
     try {
-      const response = await axios.post(`http://localhost:8000/stock_prices`, {
-        company: companyFromParams,
-      });
+      const response = await axios.post(
+        `https://stock-sage-backend.fly.dev/stock_prices`,
+        {
+          company: companyFromParams,
+        }
+      );
 
       setStockData(response.data.daily_prices);
     } catch (error) {
@@ -127,7 +130,7 @@ const StockDashboard: React.FC = () => {
   const collectFinnHubSentiment = async () => {
     try {
       const response = await axios.post(
-        "http://localhost:8000/market_sentiment",
+        "https://stock-sage-backend.fly.dev/market_sentiment",
         {
           symbol: companyFromParams,
           start_date: "2020-01-01",
@@ -161,7 +164,7 @@ const StockDashboard: React.FC = () => {
       };
 
       const response = await axios.post(
-        "http://localhost:8000/trade_decisions",
+        "https://stock-sage-backend.fly.dev/trade_decisions",
         data
       );
       setDecision(response.data.action);
@@ -177,7 +180,7 @@ const StockDashboard: React.FC = () => {
   const fetchSentimentScores = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:8000/daily_sentiment_scores`
+        `https://stock-sage-backend.fly.dev/daily_sentiment_scores`
       );
       setSentimentData(response.data.daily_sentiment_scores);
       setAverageSentiment(response.data.average_sentiment);
@@ -190,7 +193,7 @@ const StockDashboard: React.FC = () => {
   const collectRedditPosts = async () => {
     try {
       const response = await axios.post(
-        `http://localhost:8000/collect_reddit_posts`,
+        `https://stock-sage-backend.fly.dev/collect_reddit_posts`,
         {
           company: companyFromParams,
         }
